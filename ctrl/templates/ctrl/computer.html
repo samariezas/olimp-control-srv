@@ -15,4 +15,14 @@
 {% else %}
 <p>nera</p>
 {% endif %}
+<p>Bilietėliai:</p>
+{% if tickets %}
+    <ul>
+    {% for t in tickets %}
+        <li><a href="{% url 'ctrl.ticket' pk=t.pk %}">{{ t.task.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+<p>nera</p>
+{% endif %}
 {% endblock %}

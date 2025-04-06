@@ -3,7 +3,9 @@
 {% block title %}Užduotys - LMIO CTRL{% endblock %}
 
 {% block content %}
+<ul>
 {% for t in task_list %}
-{{ t.name }}
+    <li><a href="{% url 'ctrl.task' pk=t.pk %}">{{ t.name }}</a></li>
 {% endfor %}
+</ul>
 {% endblock %}

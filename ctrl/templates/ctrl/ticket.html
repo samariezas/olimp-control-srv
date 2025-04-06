@@ -4,5 +4,6 @@
 
 {% block content %}
 <p>{{ ticket.pk }}</p>
-<p>{{ ticket.task.name }}</p>
+<p>Kompiuteris: <a href="{% url 'ctrl.computer' machine_id=ticket.computer.machine_id %}">{{ ticket.computer.name }}</a></p>
+<p><a href="{% url 'ctrl.task' pk=ticket.task.pk %}">{{ ticket.task.name }}</a></p>
 {% endblock %}

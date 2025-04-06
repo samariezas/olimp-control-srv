@@ -3,5 +3,13 @@
 {% block title %}Užduotis {{ task.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-{{ task.name }}
+<p>{{ task.name }}</p>
+<p>Pridėjo: {{ task.author.username }}</p>
+<pre>{{ task.payload }}</pre>
+<p>Bilietėliai:</p>
+<ul>
+{% for t in task.ticket_set.all %}
+    <li><a href="{% url 'ctrl.ticket' pk=t.pk %}">{{ t.pk }} - {{ t.computer.name }}</a></li>
+{% endfor %}
+</ul>
 {% endblock %}
