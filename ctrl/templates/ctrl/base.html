@@ -5,6 +5,12 @@
         <title>{% block title %}LMIO CTRL{% endblock %}</title>
     </head>
     <body>
+        <div id="top-nav">
+            <ul>
+                <li><a href="{% url 'ctrl.index' %}">Statusas</a></li>
+                <li><a href="{% url 'ctrl.task_list' %}">Užduotys</a></li>
+            </ul>
+        </div>
         {% block content %}
         {% endblock %}
     </body>
