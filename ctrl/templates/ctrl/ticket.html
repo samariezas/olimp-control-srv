@@ -3,24 +3,56 @@
 {% block title %}Bilietėlis {{ ticket.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<p>Ticket ID: {{ ticket.pk }}</p>
-<p>Task: <a href="{% url 'ctrl.task' ticket.task.pk %}">{{ ticket.task.name }} </a></p>
-<p>Computer: <a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }} </a></p>
-<p>Status: {{ ticket.status_string }}</p>
+<h3>Ticket ID: {{ ticket.pk }}</h3>
+<table>
+<tr>
+    <td>Task:</td>
+    <td><a href="{% url 'ctrl.task' ticket.task.pk %}">{{ ticket.task.name }}</a></td>
+</tr>
+<tr>
+    <td>Computer:</td>
+    <td> <a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }} </a></td>
+</tr>
+<tr>
+    <td>Status:</td>
+    <td>{{ ticket.status_string }}</td>
+</tr>
+{% if ticket.exit_code is not None %}
+<tr>
+    <td>Exit code:</td>
+    <td>{{ ticket.exit_code }}</td>
+</tr>
+{% endif %}
+{% if ticket.runtime is not None %}
+<tr>
+    <td>Execution time:</td>
+    <td>{{ ticket.runtime_rounded }}</td>
+</tr>
+{% endif %}
+<tr>
+    <td>Date added:</td>
+    <td>{{ ticket.added }}</td>
+</tr>
+{% if ticket.fetched is not None %}
+<tr>
+    <td>Date fetched:</td>
+    <td>{{ ticket.fetched }}</td>
+</tr>
+{% endif %}
+{% if ticket.completed is not None %}
+<tr>
+    <td>Date completed:</td>
+    <td>{{ ticket.completed }}</td>
+</tr>
+{% endif %}
+</table>
 
-{% if ticket.is_completed %}
-<p>Exit code: {{ ticket.exit_code }}</p>
-<p>Execution time: {{ ticket.runtime_rounded }}</p>
-<p>Date added: {{ ticket.added }}</p>
-<p>Date fetched: {{ ticket.fetched }}</p>
-
-Task payload:
+<h3>Task payload:</h3>
 <pre>{{ ticket.task.payload }} </pre>
 
-Stdout:
+<h3>Stdout:</h3>
 <pre>{{ ticket.stdout }} </pre>
 
-Stderr:
+<h3>Stderr:</h3>
 <pre>{{ ticket.stderr }} </pre>
-{% endif %}
 {% endblock %}

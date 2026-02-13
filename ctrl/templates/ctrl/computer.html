@@ -3,32 +3,43 @@
 {% block title %}{{ computer.name }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<p>{{ computer.name }}</p>
-<p>{{ computer.machine_id }}</p>
-<p>Location: {{ computer.location.name }}</p>
+<h3>Computer: {{ computer.name }}</h3>
+<table>
+    <tr>
+        <td>Location: </td>
+        <td>{{ computer.location.name }}</td>
+    </tr>
+    <tr>
+        <td>MID: </td>
+        <td>{{ computer.machine_id }}</td>
+    </tr>
+</table>
 <p>checkinai:</p>
 {% if checkins %}
-    <ul>
+    <table>
     {% for c in checkins %}
-        <li><span>{{ c.timestamp }}</span><span>{{ c.uptime }}</span>
+        <tr>
+            <td>{{ c.timestamp }}</td>
+            <td>{{ c.uptime }}</td>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% else %}
 <p>nera</p>
 {% endif %}
 <p>ticketai:</p>
 {% if tickets %}
-    <ul>
+    <table>
     {% for t in tickets %}
-        <li>
-            <a href="{% url 'ctrl.ticket' t.pk %}">Ticket id {{ t.pk }}</a>
-            <span>{{ t.status_string }}</span>
+        <tr>
+            <td><a href="{% url 'ctrl.ticket' t.pk %}">Ticket id {{ t.pk }}: {{ t.task.name }}</a></td>
+            <td>{{ t.status_string }}</td>
             {% if t.is_completed %}
-            <span>exitcode: {{ t.exit_code }} @ {{ t.runtime_rounded }}</span>
+            <td>exitcode: {{ t.exit_code }} @ {{ t.runtime_rounded }}</td>
             {% endif %}
-        </li>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% else %}
 <p>nera</p>
 {% endif %}

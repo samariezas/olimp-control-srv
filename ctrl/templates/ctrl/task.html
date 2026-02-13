@@ -3,12 +3,24 @@
 {% block title %}Užduotis {{ task.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-{{ task.name }}
-<p>Run as: {{ task.run_as }}</p>
-<p>Date: {{ task.added }}</p>
-<p>Author: {{ task.author.username }}</p>
-Payload: <pre>{{ task.payload }}</pre>
-Tickets:
+<h3>Task: {{ task.name }}</h3>
+<table>
+    <tr>
+        <td>Run as:</td>
+        <td>{{ task.run_as }}</td>
+    </tr>
+    <tr>
+        <td>Date:</td>
+        <td>{{ task.added }}</td>
+    </tr>
+    <tr>
+        <td>Author:</td>
+        <td>{{ task.author.username }}</td>
+    </tr>
+</table>
+<h3>Payload:</h3>
+<pre>{{ task.payload }}</pre>
+<h3>Tickets:</h3>
 {% for ticket in tickets %}
 <p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
 {% endfor %}
