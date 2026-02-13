@@ -3,14 +3,26 @@
 {% block title %}Užduotis {{ task.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<p>{{ task.name }}</p>
-<p>Sukurta: {{ task.added }}</p>
-<p>Pridėjo: {{ task.author.username }}</p>
+<h3>Užduotis: {{ task.name }}</h3>
+<table>
+    <tr>
+        <td>Leisti kaip:</td>
+        <td>{{ task.run_as }}</td>
+    </tr>
+    <tr>
+        <td>Pridėta:</td>
+        <td>{{ task.added }}</td>
+    </tr>
+    <tr>
+        <td>Autorius:</td>
+        <td>{{ task.author.username }}</td>
+    </tr>
+</table>
+<h3>Kodas:</h3>
 <pre>{{ task.payload }}</pre>
-<p>Bilietėliai:</p>
-<ul>
-{% for t in task.ticket_set.all %}
-    <li><a href="{% url 'ctrl.ticket' pk=t.pk %}">{{ t.pk }} - {{ t.computer.name }}</a></li>
+<h3>Bilietėliai:</h3>
+{% for ticket in tickets %}
+<p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
 {% endfor %}
 </ul>
 {% endblock %}
