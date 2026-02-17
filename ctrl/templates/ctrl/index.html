@@ -1,6 +1,7 @@
 {% extends "ctrl/base.html" %}
 
 {% block content %}
+{{ current_time }}
 {% for location in locations %}
     <h4>Location {{ location.name }}</h4>
     {% if location.computer_set.all %}

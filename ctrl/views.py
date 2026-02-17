@@ -4,18 +4,21 @@ from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
 from django.views import generic
+from django.utils import timezone
 
 from .models import Location, Computer, Task, Ticket
 
 
 @login_required
 def index(request):
+    current_time = timezone.now()
     locations = Location.objects.order_by("pk").prefetch_related(Prefetch(
         "computer_set",
         queryset=Computer.objects.order_by("name")
     ))
     unassigned_computers = Computer.objects.order_by("name").filter(location=None)
     context = {
+        "current_time": current_time,
         "locations": locations,
         "unassigned_computers": unassigned_computers,
     }

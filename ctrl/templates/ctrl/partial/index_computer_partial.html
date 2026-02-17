@@ -1,4 +1,5 @@
 <li{{ computer.rooted|yesno:' class="rooted",,'|safe }}>
     <a href="{% url 'ctrl.computer' computer.machine_id %}">{{ computer.name }}</a>
     <span>{{ computer.most_recent_checkin.uptime }}</span>
+    <span>{{ computer.is_online }}</span>
 </li>
