@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Count, Q
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class Location(models.Model):
@@ -24,6 +26,14 @@ class Computer(models.Model):
     def rooted(self):
         c = self.most_recent_checkin
         return c.has_root if c else False
+
+    @property
+    def is_online(self):
+        current_time = timezone.now()
+        most_recent_checkin = self.most_recent_checkin
+        if not most_recent_checkin:
+            return False
+        return current_time - most_recent_checkin.timestamp < timedelta(seconds=30)
 
     def __str__(self):
         return f"{self.name} ({self.machine_id})"
