@@ -19,7 +19,13 @@
 {% if tickets %}
     <ul>
     {% for t in tickets %}
-        <li><a href="{% url 'ctrl.ticket' pk=t.pk %}">{{ t.task.name }}</a></li>
+        <li>
+            <a href="{% url 'ctrl.ticket' t.pk %}">Ticket id {{ t.pk }}</a>
+            <span>{{ t.status_string }}</span>
+            {% if t.is_completed %}
+            <span>exitcode: {{ t.exit_code }} @ {{ t.runtime_rounded }}</span>
+            {% endif %}
+        </li>
     {% endfor %}
     </ul>
 {% else %}
