@@ -5,6 +5,7 @@
 {% block content %}
 <p>{{ computer.name }}</p>
 <p>{{ computer.machine_id }}</p>
+<p>Location: {{ computer.location.name }}</p>
 <p>checkinai:</p>
 {% if checkins %}
     <ul>

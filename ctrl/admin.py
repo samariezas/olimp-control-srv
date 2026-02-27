@@ -12,6 +12,7 @@ class UnknownComputerAdmin(admin.ModelAdmin):
 
 admin.site.register(
     (
+        models.Location,
         models.Computer,
         models.Task,
         models.Ticket,

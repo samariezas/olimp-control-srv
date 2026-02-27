@@ -1,17 +1,23 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
 from django.views import generic
 
-from .models import Computer, Task, Ticket
+from .models import Location, Computer, Task, Ticket
 
 
 @login_required
 def index(request):
-    computers = Computer.objects.order_by("name")
+    locations = Location.objects.order_by("pk").prefetch_related(Prefetch(
+        "computer_set",
+        queryset=Computer.objects.order_by("name")
+    ))
+    unassigned_computers = Computer.objects.order_by("name").filter(location=None)
     context = {
-        "computers": computers,
+        "locations": locations,
+        "unassigned_computers": unassigned_computers,
     }
     return HttpResponse(render(request, "ctrl/index.html", context))
 
