@@ -21,6 +21,14 @@
 <h3>Payload:</h3>
 <pre>{{ task.payload }}</pre>
 <h3>Tickets:</h3>
+<p>
+    New: {{ task.new_count }},
+    in progress: {{ task.in_progress_count }},
+    completed: {{ task.completed_count }}
+    {% if task.error_count %}
+    , non-zero exit: {{ task.error_count }}
+    {% endif %}
+</p>
 {% for ticket in tickets %}
 <p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
 {% endfor %}
