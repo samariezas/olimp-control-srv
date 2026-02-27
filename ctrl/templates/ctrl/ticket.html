@@ -6,4 +6,21 @@
 <p>{{ ticket.pk }}</p>
 <p>Kompiuteris: <a href="{% url 'ctrl.computer' machine_id=ticket.computer.machine_id %}">{{ ticket.computer.name }}</a></p>
 <p><a href="{% url 'ctrl.task' pk=ticket.task.pk %}">{{ ticket.task.name }}</a></p>
+<p>Status: {{ ticket.status_string }}</p>
+
+{% if ticket.is_completed %}
+<p>Exit code: {{ ticket.exit_code }}</p>
+<p>Execution time: {{ ticket.runtime_rounded }}</p>
+<p>Date added: {{ ticket.added }}</p>
+<p>Date fetched: {{ ticket.fetched }}</p>
+
+Task payload:
+<pre>{{ ticket.task.payload }} </pre>
+
+Stdout:
+<pre>{{ ticket.stdout }} </pre>
+
+Stderr:
+<pre>{{ ticket.stderr }} </pre>
+{% endif %}
 {% endblock %}
