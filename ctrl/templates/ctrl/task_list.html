@@ -5,7 +5,7 @@
 {% block content %}
 <ul>
 {% for t in task_list %}
-    <li><a href="{% url 'ctrl.task' pk=t.pk %}">{{ t.name }}</a></li>
+    <li><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</a> {{ t.added }} {{ t.new_count }} {{ t.in_progress_count }} {{ t.completed_count }} {{ t.error_count }}</li>
 {% endfor %}
 </ul>
 {% endblock %}

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Count, Q
 from django.contrib.auth.models import User
 
 
@@ -54,6 +55,32 @@ class Task(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     run_as = models.CharField(max_length=16)
     payload = models.TextField()
+
+
+    @staticmethod
+    def q_tickets_new():
+        return Q(ticket__fetched__isnull=True)
+
+    @staticmethod
+    def q_tickets_in_progress():
+        return Q(ticket__fetched__isnull=False, ticket__completed__isnull=True)
+
+    @staticmethod
+    def q_tickets_completed():
+        return Q(ticket__completed__isnull=False)
+
+    @staticmethod
+    def q_tickets_error():
+        return Q(~Q(ticket__exit_code=0), ticket__completed__isnull=False)
+
+    @staticmethod
+    def annotate_counts(obj):
+        return obj.annotate(
+            new_count=Count("ticket", filter=Q(ticket__fetched__isnull=True)),
+            in_progress_count=Count("ticket", filter=Q(ticket__fetched__isnull=False, ticket__completed__isnull=True)),
+            completed_count=Count("ticket", filter=Q(ticket__completed__isnull=False)),
+            error_count=Count("ticket", filter=Q(~Q(ticket__exit_code=0), ticket__completed__isnull=False)),
+        )
 
     def __str__(self):
         return f"{self.name}"

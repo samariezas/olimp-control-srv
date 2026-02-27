@@ -21,6 +21,14 @@
 <h3>Kodas:</h3>
 <pre>{{ task.payload }}</pre>
 <h3>Bilietėliai:</h3>
+<p>
+    Nauji: {{ task.new_count }},
+    vykdomi: {{ task.in_progress_count }},
+    įvykdyti: {{ task.completed_count }}
+    {% if task.error_count %}
+    , su klaidom: {{ task.error_count }}
+    {% endif %}
+</p>
 {% for ticket in tickets %}
 <p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
 {% endfor %}

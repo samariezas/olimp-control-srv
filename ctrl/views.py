@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
 from django.views import generic
@@ -36,9 +36,15 @@ def computer(request, machine_id):
     return HttpResponse(render(request, "ctrl/computer.html", context))
 
 
-class TaskView(LoginRequiredMixin, generic.DetailView):
-    template_name = "ctrl/task.html"
-    model = Task
+@login_required
+def task(request, pk):
+    task = Task.annotate_counts(Task.objects).get(pk=pk)
+    tickets = task.ticket_set.order_by("-pk")
+    context = {
+        "task": task,
+        "tickets": tickets,
+    }
+    return HttpResponse(render(request, "ctrl/task.html", context))
 
 
 class TaskListView(LoginRequiredMixin, generic.ListView):
@@ -46,7 +52,9 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
     context_object_name = "task_list"
 
     def get_queryset(self):
-        return Task.objects.order_by("-added")
+        return Task.annotate_counts(
+            Task.objects.order_by("-added")
+        )
 
 
 class TicketView(LoginRequiredMixin, generic.DetailView):
