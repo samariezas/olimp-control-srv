@@ -3,6 +3,24 @@
 {% block title %}Bilietėlis {{ ticket.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<p>{{ ticket.pk }}</p>
-<p>{{ ticket.task.name }}</p>
+<p>Ticket ID: {{ ticket.pk }}</p>
+<p>Task: <a href="{% url 'ctrl.task' ticket.task.pk %}">{{ ticket.task.name }} </a></p>
+<p>Computer: <a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }} </a></p>
+<p>Status: {{ ticket.status_string }}</p>
+
+{% if ticket.is_completed %}
+<p>Exit code: {{ ticket.exit_code }}</p>
+<p>Execution time: {{ ticket.runtime_rounded }}</p>
+<p>Date added: {{ ticket.added }}</p>
+<p>Date fetched: {{ ticket.fetched }}</p>
+
+Task payload:
+<pre>{{ ticket.task.payload }} </pre>
+
+Stdout:
+<pre>{{ ticket.stdout }} </pre>
+
+Stderr:
+<pre>{{ ticket.stderr }} </pre>
+{% endif %}
 {% endblock %}
