@@ -30,9 +30,15 @@ def computer(request, machine_id):
     return HttpResponse(render(request, "ctrl/computer.html", context))
 
 
-class TaskView(LoginRequiredMixin, generic.DetailView):
-    template_name = "ctrl/task.html"
-    model = Task
+@login_required
+def task(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+    tickets = task.ticket_set.order_by("-pk")
+    context = {
+        "task": task,
+        "tickets": tickets,
+    }
+    return HttpResponse(render(request, "ctrl/task.html", context))
 
 
 class TaskListView(LoginRequiredMixin, generic.ListView):

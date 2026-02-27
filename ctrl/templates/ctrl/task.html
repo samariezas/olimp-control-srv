@@ -4,4 +4,12 @@
 
 {% block content %}
 {{ task.name }}
+<p>Run as: {{ task.run_as }}</p>
+<p>Date: {{ task.added }}</p>
+<p>Author: {{ task.author.username }}</p>
+Payload: <pre>{{ task.payload }}</pre>
+Tickets:
+{% for ticket in tickets %}
+<p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
+{% endfor %}
 {% endblock %}
