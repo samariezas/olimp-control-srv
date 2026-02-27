@@ -1,16 +1,25 @@
 {% extends "ctrl/base.html" %}
 
 {% block content %}
-{% if computers %}
+{% for location in locations %}
+    <h4>Location {{ location.name }}</h4>
+    {% if location.computer_set.all %}
+        <ul>
+        {% for computer in location.computer_set.all %}
+            {% include "ctrl/partial/index_computer_partial.html" %}
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No computers are defined</p>
+    {% endif %}
+{% endfor %}
+
+{% if unassigned_computers %}
+    <h4>Unassigned computers</h4>
     <ul>
-    {% for computer in computers %}
-        <li{{ computer.rooted|yesno:' class="rooted",,'|safe }}>
-            <a href="{% url 'ctrl.computer' computer.machine_id %}">{{ computer.name }}</a>
-            <span>{{ computer.most_recent_checkin.uptime }}</span>
-        </li>
+    {% for computer in unassigned_computers %}
+        {% include "ctrl/partial/index_computer_partial.html" %}
     {% endfor %}
     </ul>
-{% else %}
-    <p>No computers are defined</p>
 {% endif %}
 {% endblock %}
