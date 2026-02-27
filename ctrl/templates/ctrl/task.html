@@ -29,7 +29,25 @@
     , non-zero exit: {{ task.error_count }}
     {% endif %}
 </p>
+<table>
 {% for ticket in tickets %}
-<p><a href="{% url 'ctrl.ticket' ticket.pk %}">Ticket ID {{ ticket.pk }} {{ ticket.computer.name }}</a></p>
+    <tr>
+        <td>
+            <a href="{% url 'ctrl.ticket' ticket.pk %}">
+                Ticket ID {{ ticket.pk }}<br>
+                {{ ticket.computer.name }} @ {{ ticket.computer.location.name }}
+            </a>
+        </td>
+        <td>
+            {{ ticket.status_string }}
+        </td>
+        {% if ticket.is_completed %}
+        <td>
+            exitcode: {{ ticket.exit_code }}
+            runtime: {{ ticket.runtime_rounded }}
+        </td>
+        {% endif %}
+    </tr>
 {% endfor %}
+</table>
 {% endblock %}

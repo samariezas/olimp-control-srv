@@ -3,7 +3,19 @@
 {% block title %}Užduotys - LMIO CTRL{% endblock %}
 
 {% block content %}
+<h3>Task list</h3>
+<table>
 {% for t in task_list %}
-<p><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</a> {{ t.added }} {{ t.new_count }} {{ t.in_progress_count }} {{ t.completed_count }} {{ t.error_count }}</p>
+    <tr>
+        <td><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</td>
+        <td>{{ t.added }}</td>
+        <td>{{ t.new_count }}</td>
+        <td>{{ t.in_progress_count }}</td>
+        <td>{{ t.completed_count }}</td>
+        {% if t.error_count %}
+        <td>{{ t.error_count }}</td>
+        {% endif %}
+    </tr>
 {% endfor %}
+</table>
 {% endblock %}
