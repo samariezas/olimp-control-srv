@@ -74,5 +74,20 @@ class Ticket(models.Model):
     def is_in_progress(self):
         return not (self.is_new or self.is_completed)
 
+    @property
+    def status_string(self):
+        if self.is_new:
+            return 'new'
+        elif self.is_completed:
+            return 'done'
+        elif self.is_in_progress:
+            return 'in progress'
+        else:
+            return 'unknown'
+
+    @property
+    def runtime_rounded(self):
+        return f'{self.runtime:.3f}s'
+
     def __str__(self):
         return f"{self.task.pk} @ {self.computer.name}"
