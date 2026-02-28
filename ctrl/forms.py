@@ -1,18 +1,16 @@
 from django import forms
 from django.forms.widgets import Textarea
-from .models import Computer
+from .models import Computer, Task
 
 
-class NewTaskForm(forms.Form):
+class NewTaskForm(forms.ModelForm):
     name = forms.CharField(
         label="Name",
-        max_length=256,
         required=True
     )
     run_as = forms.CharField(
         label="Execute as",
         initial="root",
-        max_length=128,
         required=True
     )
     computers = forms.ModelMultipleChoiceField(
@@ -26,3 +24,8 @@ class NewTaskForm(forms.Form):
         max_length=16*1024,
         required=True
     )
+
+    class Meta:
+        model = Task
+        fields = ['name', 'run_as', 'computers', 'payload']
+

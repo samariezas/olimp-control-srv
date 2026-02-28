@@ -57,22 +57,14 @@ def create_task(request):
     if request.method == "POST":
         form = NewTaskForm(request.POST)
         if form.is_valid():
-            task_name = form.cleaned_data["name"]
-            task_run_as = form.cleaned_data["run_as"]
+            task = form.save(commit=False)
+            task.author = request.user
             task_computers = form.cleaned_data["computers"]
-            task_payload = form.cleaned_data["payload"]
-            task = Task(
-                name=task_name,
-                author=request.user,
-                run_as=task_run_as,
-                payload=task_payload,
-            )
             tickets = [Ticket(task=task, computer=computer)
                        for computer in task_computers]
             with transaction.atomic():
                 task.save()
                 Ticket.objects.bulk_create(tickets)
-            print(task.pk)
             return redirect("ctrl.task", pk=task.pk)
     else:
         form = NewTaskForm()
