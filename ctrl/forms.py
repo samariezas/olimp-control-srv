@@ -23,7 +23,12 @@ class NewTaskForm(forms.ModelForm):
         required=True
     )
     computers = ComputerMultipleChoiceField(
-        queryset=Computer.objects.all(),
+        queryset=Computer.objects.order_by(
+            "location__sequence_num",
+            "location__name",
+            "sequence_num",
+            "name"
+        ),
         widget=forms.SelectMultiple,
         required=True,
     )

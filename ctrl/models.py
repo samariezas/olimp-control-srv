@@ -7,6 +7,7 @@ from datetime import timedelta
 
 class Location(models.Model):
     name = models.TextField()
+    sequence_num = models.IntegerField(default=0, null=False)
 
     def __str__(self):
         return f"{self.name}"
@@ -16,6 +17,7 @@ class Computer(models.Model):
     machine_id = models.CharField(max_length=40, db_index=True)
     name = models.CharField(max_length=32)
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
+    sequence_num = models.IntegerField(default=0, null=False)
 
     @property
     def most_recent_checkin(self):
