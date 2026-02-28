@@ -3,6 +3,15 @@ from django.forms.widgets import Textarea
 from .models import Computer, Task
 
 
+class ComputerMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        if obj.location:
+            location_name = obj.location.name
+        else:
+            location_name = 'Unknown location'
+        return f'{location_name}: {obj.name}'
+
+
 class NewTaskForm(forms.ModelForm):
     name = forms.CharField(
         label="Name",
@@ -13,7 +22,7 @@ class NewTaskForm(forms.ModelForm):
         initial="root",
         required=True
     )
-    computers = forms.ModelMultipleChoiceField(
+    computers = ComputerMultipleChoiceField(
         queryset=Computer.objects.all(),
         widget=forms.SelectMultiple,
         required=True,
@@ -21,7 +30,6 @@ class NewTaskForm(forms.ModelForm):
     payload = forms.CharField(
         label="Payload",
         widget=Textarea,
-        max_length=16*1024,
         required=True
     )
 
