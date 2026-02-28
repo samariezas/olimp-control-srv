@@ -7,5 +7,6 @@ urlpatterns = [
     path("computer/<str:machine_id>/", views.computer, name="ctrl.computer"),
     path("task_list/", views.TaskListView.as_view(), name="ctrl.task_list"),
     path("task/<int:pk>/", views.task, name="ctrl.task"),
+    path("create-task/", views.create_task, name="ctrl.create_task"),
     path("ticket/<int:pk>/", views.TicketView.as_view(), name="ctrl.ticket"),
 ]

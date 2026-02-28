@@ -1,12 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Prefetch, Count, Q
-from django.shortcuts import get_object_or_404, render
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse
 from django.views import generic
 from django.utils import timezone
 
 from .models import Location, Computer, Task, Ticket
+from .forms import NewTaskForm
 
 
 @login_required
@@ -48,6 +50,34 @@ def task(request, pk):
         "tickets": tickets,
     }
     return HttpResponse(render(request, "ctrl/task.html", context))
+
+
+@login_required
+def create_task(request):
+    if request.method == "POST":
+        form = NewTaskForm(request.POST)
+        if form.is_valid():
+            task_name = form.cleaned_data["name"]
+            task_run_as = form.cleaned_data["run_as"]
+            task_computers = form.cleaned_data["computers"]
+            task_payload = form.cleaned_data["payload"]
+            task = Task(
+                name=task_name,
+                author=request.user,
+                run_as=task_run_as,
+                payload=task_payload,
+            )
+            tickets = [Ticket(task=task, computer=computer)
+                       for computer in task_computers]
+            with transaction.atomic():
+                task.save()
+                Ticket.objects.bulk_create(tickets)
+            print(task.pk)
+            return redirect("ctrl.task", pk=task.pk)
+    else:
+        form = NewTaskForm()
+
+    return render(request, "ctrl/create_task.html", {"form": form})
 
 
 class TaskListView(LoginRequiredMixin, generic.ListView):
