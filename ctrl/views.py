@@ -48,7 +48,7 @@ def computer(request, machine_id):
 
 @login_required
 def task(request, pk):
-    task = Task.annotate_counts(Task.objects).get(pk=pk)
+    task = get_object_or_404(Task.objects.with_ticket_status_counts(), pk=pk)
     tickets = task.ticket_set.order_by("-pk")
     context = {
         "task": task,
@@ -82,9 +82,7 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
     context_object_name = "task_list"
 
     def get_queryset(self):
-        return Task.annotate_counts(
-            Task.objects.order_by("-added")
-        )
+        return Task.objects.with_ticket_status_counts().order_by("-added")
 
 
 class TicketView(LoginRequiredMixin, generic.DetailView):
