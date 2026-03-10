@@ -36,7 +36,7 @@ def index(request):
 def computer(request, machine_id):
     computer = get_object_or_404(Computer.objects.with_last_checkin(), machine_id=machine_id)
     checkins = computer.checkin_set.order_by("-timestamp")[:10]
-    tickets = computer.ticket_set.order_by("-added")
+    tickets = computer.ticket_set.select_related("task").order_by("-added")
 
     context = {
         "computer": computer,
