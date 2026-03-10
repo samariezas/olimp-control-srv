@@ -14,11 +14,16 @@ from .forms import NewTaskForm
 @login_required
 def index(request):
     current_time = timezone.now()
-    locations = Location.objects.order_by("pk").prefetch_related(Prefetch(
+    ordered_computer_queryset = (
+        Computer.objects
+        .with_online_status()
+        .order_by("sequence_num")
+    )
+    locations = Location.objects.order_by("sequence_num").prefetch_related(Prefetch(
         "computer_set",
-        queryset=Computer.objects.order_by("name")
+        queryset=ordered_computer_queryset
     ))
-    unassigned_computers = Computer.objects.order_by("name").filter(location=None)
+    unassigned_computers = ordered_computer_queryset.filter(location=None)
     context = {
         "current_time": current_time,
         "locations": locations,
@@ -29,7 +34,7 @@ def index(request):
 
 @login_required
 def computer(request, machine_id):
-    computer = get_object_or_404(Computer, machine_id=machine_id)
+    computer = get_object_or_404(Computer.objects.with_last_checkin(), machine_id=machine_id)
     checkins = computer.checkin_set.order_by("-timestamp")[:10]
     tickets = computer.ticket_set.order_by("-added")
 

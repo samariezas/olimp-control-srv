@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Count, Q
+from django.db.models import Count, Q, When, Case, Value, BooleanField, Subquery, OuterRef
+from django.db.models.functions import Now
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
@@ -13,29 +14,54 @@ class Location(models.Model):
         return f"{self.name}"
 
 
+class ComputerQuerySet(models.QuerySet):
+    def with_last_checkin(self):
+        last_checkin = (
+            CheckIn.objects
+            .filter(computer=OuterRef("pk"))
+            .order_by("-timestamp")
+        )
+        return self.annotate(
+            last_checkin_timestamp=Subquery(
+                last_checkin.values("timestamp")[:1]
+            ),
+            last_checkin_uptime=Subquery(
+                last_checkin.values("uptime")[:1]
+            ),
+            rooted=Subquery(
+                last_checkin.values("has_root")[:1]
+            ),
+        )
+
+    def with_online_status(self):
+        threshold = Now() - timedelta(seconds=5)
+        return (
+            self.with_last_checkin()
+            .annotate(
+                is_online=Case(
+                    When(
+                        last_checkin_timestamp__gte=threshold,
+                        then=Value(True),
+                    ),
+                    default=Value(False),
+                    output_field=BooleanField(),
+                )
+            )
+        )
+
+
 class Computer(models.Model):
     machine_id = models.CharField(max_length=40, db_index=True)
     name = models.CharField(max_length=32)
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
     sequence_num = models.IntegerField(default=0, null=False)
 
+    objects = ComputerQuerySet.as_manager()
+
     @property
     def most_recent_checkin(self):
         cs = self.checkin_set.order_by("-timestamp")[:1]
         return cs[0] if cs else None
-
-    @property
-    def rooted(self):
-        c = self.most_recent_checkin
-        return c.has_root if c else False
-
-    @property
-    def is_online(self):
-        current_time = timezone.now()
-        most_recent_checkin = self.most_recent_checkin
-        if not most_recent_checkin:
-            return False
-        return current_time - most_recent_checkin.timestamp < timedelta(seconds=30)
 
     def __str__(self):
         return f"{self.name} ({self.machine_id})"
@@ -67,7 +93,6 @@ class Task(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     run_as = models.CharField(max_length=16)
     payload = models.TextField()
-
 
     @staticmethod
     def q_tickets_new():
