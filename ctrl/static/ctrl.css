@@ -135,6 +135,16 @@ nav .nav-right a {
     text-decoration: none;
 }
 
+/* === Room Grid (positioned layout) === */
+.room-grid {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.room-grid .computer-card {
+    min-width: 0;
+}
+
 /* === Computer Grid === */
 .computer-grid {
     display: grid;

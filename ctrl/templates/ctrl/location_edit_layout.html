@@ -1,0 +1,326 @@
+{% extends "ctrl/base.html" %}
+{% block title %}Išdėstymas - {{ location.name }} - LMIO CTRL{% endblock %}
+
+{% block extra_head %}
+<style>
+    .edit-layout { display: flex; gap: 20px; align-items: flex-start; }
+    .edit-grid {
+        display: grid;
+        gap: 4px;
+    }
+    .grid-cell {
+        width: 120px;
+        height: 70px;
+        border: 2px dashed var(--color-border);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: var(--color-text-muted);
+        user-select: none;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .grid-cell.drag-over {
+        background: #dbeafe;
+        border-color: #2563eb;
+    }
+    .grid-cell .grid-computer {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-surface);
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: grab;
+        touch-action: none;
+        box-shadow: var(--shadow);
+    }
+    .grid-cell .grid-computer:active { cursor: grabbing; }
+    .sidebar {
+        min-width: 180px;
+        max-width: 200px;
+    }
+    .sidebar h3 { margin: 0 0 8px; font-size: 14px; }
+    .sidebar-item {
+        padding: 8px 12px;
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        margin-bottom: 4px;
+        cursor: grab;
+        touch-action: none;
+        box-shadow: var(--shadow);
+        font-size: 13px;
+        font-weight: 600;
+        user-select: none;
+    }
+    .sidebar-item:active { cursor: grabbing; }
+    .drag-clone {
+        position: fixed;
+        z-index: 9999;
+        opacity: 0.85;
+        pointer-events: none;
+        padding: 8px 12px;
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .edit-warning {
+        background: #fffbeb;
+        border: 1px solid var(--color-in-progress);
+        border-radius: var(--radius);
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        font-size: 13px;
+    }
+    .edit-toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .edit-toolbar label { font-size: 13px; font-weight: 600; }
+    .edit-toolbar input[type="number"] { width: 60px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius); }
+    .save-ok { color: var(--color-completed); font-weight: 600; font-size: 13px; display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ location.name }} — išdėstymo redagavimas</h1>
+</div>
+<div class="edit-warning">
+    Pertempkite kompiuterius į norimas vietas. Pakeitimai nebus išsaugoti, kol nepaspausite „Išsaugoti".
+</div>
+
+<div class="edit-toolbar">
+    <label>Stulpeliai: <input type="number" id="grid-cols-input" value="{{ location.grid_cols|default:6 }}" min="1" max="30"></label>
+    <label>Eilutės: <input type="number" id="grid-rows-input" value="{{ grid_rows }}" min="1" max="30"></label>
+    <button class="btn btn-sm btn-primary" id="save-btn">Išsaugoti</button>
+    <span class="save-ok" id="save-ok">Išsaugota!</span>
+    <a href="{% url 'ctrl.location' location.pk %}" class="btn btn-sm">Atgal</a>
+</div>
+
+<div class="edit-layout">
+    <div>
+        <div class="edit-grid" id="edit-grid"></div>
+    </div>
+    <div class="sidebar" id="sidebar-drop">
+        <h3>Nepriskirti</h3>
+        <div id="sidebar-list"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var COMPUTERS = [
+        {% for c in placed_computers %}
+        {id: {{ c.pk }}, name: "{{ c.name|escapejs }}", row: {{ c.grid_row }}, col: {{ c.grid_col }}},
+        {% endfor %}
+        {% for c in unplaced_computers %}
+        {id: {{ c.pk }}, name: "{{ c.name|escapejs }}", row: null, col: null},
+        {% endfor %}
+    ];
+    var SAVE_URL = "{% url 'ctrl.location_save_layout' location.pk %}";
+    var CSRF = "{{ csrf_token }}";
+
+    var state = {
+        gridCols: parseInt(document.getElementById('grid-cols-input').value) || 6,
+        gridRows: parseInt(document.getElementById('grid-rows-input').value) || 4,
+        computers: {}
+    };
+    COMPUTERS.forEach(function(c) { state.computers[c.id] = {name: c.name, row: c.row, col: c.col}; });
+
+    var gridEl = document.getElementById('edit-grid');
+    var sidebarEl = document.getElementById('sidebar-list');
+    var dragState = null;
+
+    function render() {
+        // Grid
+        gridEl.style.gridTemplateColumns = 'repeat(' + state.gridCols + ', 120px)';
+        gridEl.innerHTML = '';
+        for (var r = 1; r <= state.gridRows; r++) {
+            for (var c = 1; c <= state.gridCols; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                // Find computer at this position
+                var comp = findAt(r, c);
+                if (comp) {
+                    var el = document.createElement('div');
+                    el.className = 'grid-computer';
+                    el.textContent = comp.name;
+                    el.dataset.compId = comp.id;
+                    el.addEventListener('pointerdown', onPointerDown);
+                    cell.appendChild(el);
+                }
+                gridEl.appendChild(cell);
+            }
+        }
+        // Sidebar
+        sidebarEl.innerHTML = '';
+        Object.keys(state.computers).forEach(function(id) {
+            var c = state.computers[id];
+            if (c.row !== null && c.col !== null) return;
+            var el = document.createElement('div');
+            el.className = 'sidebar-item';
+            el.textContent = c.name;
+            el.dataset.compId = id;
+            el.addEventListener('pointerdown', onPointerDown);
+            sidebarEl.appendChild(el);
+        });
+    }
+
+    function findAt(row, col) {
+        for (var id in state.computers) {
+            var c = state.computers[id];
+            if (c.row === row && c.col === col) return {id: parseInt(id), name: c.name};
+        }
+        return null;
+    }
+
+    // Pointer-based drag (works for mouse + touch)
+    function onPointerDown(e) {
+        e.preventDefault();
+        var target = e.currentTarget;
+        var compId = parseInt(target.dataset.compId);
+        var rect = target.getBoundingClientRect();
+
+        var clone = document.createElement('div');
+        clone.className = 'drag-clone';
+        clone.textContent = state.computers[compId].name;
+        clone.style.width = rect.width + 'px';
+        document.body.appendChild(clone);
+
+        dragState = {
+            compId: compId,
+            clone: clone,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top
+        };
+        clone.style.left = (e.clientX - dragState.offsetX) + 'px';
+        clone.style.top = (e.clientY - dragState.offsetY) + 'px';
+
+        target.setPointerCapture(e.pointerId);
+        target.addEventListener('pointermove', onPointerMove);
+        target.addEventListener('pointerup', onPointerUp);
+        target.addEventListener('pointercancel', onPointerUp);
+    }
+
+    var lastHighlight = null;
+    function onPointerMove(e) {
+        if (!dragState) return;
+        dragState.clone.style.left = (e.clientX - dragState.offsetX) + 'px';
+        dragState.clone.style.top = (e.clientY - dragState.offsetY) + 'px';
+
+        // Highlight drop target
+        dragState.clone.style.display = 'none';
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        dragState.clone.style.display = '';
+
+        if (lastHighlight) { lastHighlight.classList.remove('drag-over'); lastHighlight = null; }
+        if (el) {
+            var cell = el.closest('.grid-cell');
+            if (cell) { cell.classList.add('drag-over'); lastHighlight = cell; }
+        }
+    }
+
+    function onPointerUp(e) {
+        if (!dragState) return;
+        var compId = dragState.compId;
+
+        // Hide clone so elementFromPoint sees the element underneath
+        dragState.clone.style.display = 'none';
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        dragState.clone.remove();
+
+        if (lastHighlight) { lastHighlight.classList.remove('drag-over'); lastHighlight = null; }
+
+        var target = e.currentTarget;
+        target.removeEventListener('pointermove', onPointerMove);
+        target.removeEventListener('pointerup', onPointerUp);
+        target.removeEventListener('pointercancel', onPointerUp);
+
+        if (el) {
+            var cell = el.closest('.grid-cell');
+            var sidebar = el.closest('#sidebar-drop');
+            if (cell) {
+                var row = parseInt(cell.dataset.row);
+                var col = parseInt(cell.dataset.col);
+                // Swap if occupied
+                var existing = findAt(row, col);
+                if (existing && existing.id !== compId) {
+                    var old = state.computers[compId];
+                    state.computers[existing.id].row = old.row;
+                    state.computers[existing.id].col = old.col;
+                }
+                state.computers[compId].row = row;
+                state.computers[compId].col = col;
+            } else if (sidebar) {
+                state.computers[compId].row = null;
+                state.computers[compId].col = null;
+            }
+        }
+
+        dragState = null;
+        render();
+    }
+
+    // Grid size controls
+    document.getElementById('grid-cols-input').addEventListener('change', function() {
+        var val = parseInt(this.value) || 6;
+        state.gridCols = Math.max(1, Math.min(30, val));
+        this.value = state.gridCols;
+        // Unplace computers that are out of bounds
+        Object.keys(state.computers).forEach(function(id) {
+            var c = state.computers[id];
+            if (c.col !== null && c.col > state.gridCols) { c.row = null; c.col = null; }
+        });
+        render();
+    });
+    document.getElementById('grid-rows-input').addEventListener('change', function() {
+        var val = parseInt(this.value) || 4;
+        state.gridRows = Math.max(1, Math.min(30, val));
+        this.value = state.gridRows;
+        Object.keys(state.computers).forEach(function(id) {
+            var c = state.computers[id];
+            if (c.row !== null && c.row > state.gridRows) { c.row = null; c.col = null; }
+        });
+        render();
+    });
+
+    // Save
+    document.getElementById('save-btn').addEventListener('click', function() {
+        var positions = Object.keys(state.computers).map(function(id) {
+            var c = state.computers[id];
+            return {id: parseInt(id), row: c.row, col: c.col};
+        });
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+            credentials: 'same-origin',
+            body: JSON.stringify({grid_cols: state.gridCols, positions: positions})
+        }).then(function(r) {
+            if (r.ok) {
+                var ok = document.getElementById('save-ok');
+                ok.style.display = 'inline';
+                setTimeout(function() { ok.style.display = 'none'; }, 2000);
+            } else {
+                r.json().then(function(d) { alert(d.error || 'Klaida'); });
+            }
+        }).catch(function() { alert('Tinklo klaida'); });
+    });
+
+    render();
+})();
+</script>
+{% endblock %}

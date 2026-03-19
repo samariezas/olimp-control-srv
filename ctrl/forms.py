@@ -1,6 +1,6 @@
 from django import forms
 from django.forms.widgets import Textarea
-from .models import Computer, Task
+from .models import Computer, Location, Task
 
 
 class ComputerMultipleChoiceField(forms.ModelMultipleChoiceField):
@@ -41,4 +41,12 @@ class NewTaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['name', 'run_as', 'computers', 'payload']
+
+
+class RegisterComputerForm(forms.Form):
+    name = forms.CharField(max_length=32)
+    location = forms.ModelChoiceField(
+        queryset=Location.objects.order_by("sequence_num"),
+        required=False,
+    )
 

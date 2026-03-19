@@ -4,34 +4,35 @@
     <span class="last-updated" id="last-updated"></span>
 </div>
 
+{% if location.grid_cols %}
+<div class="room-grid" style="grid-template-columns: repeat({{ location.grid_cols }}, 1fr);">
+    {% for computer in placed_computers %}
+    <div class="computer-card {% if computer.has_in_progress %}busy{% elif computer.is_online %}online{% else %}offline{% endif %}"
+         style="grid-row: {{ computer.grid_row }}; grid-column: {{ computer.grid_col }};">
+        {% include "ctrl/partial/computer_card.html" %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if unplaced_computers %}
+<div class="section-title">Nepriskirti pozicijai</div>
+<div class="computer-grid">
+    {% for computer in unplaced_computers %}
+    <div class="computer-card {% if computer.has_in_progress %}busy{% elif computer.is_online %}online{% else %}offline{% endif %}">
+        {% include "ctrl/partial/computer_card.html" %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% else %}
 <div class="computer-grid">
     {% for computer in computers %}
     <div class="computer-card {% if computer.has_in_progress %}busy{% elif computer.is_online %}online{% else %}offline{% endif %}">
-        <div class="card-name">
-            <span class="status-dot"></span>
-            <a href="{% url 'ctrl.computer' computer.machine_id %}">{{ computer.name }}</a>
-        </div>
-        {% if computer.last_checkin_uptime %}
-        <div class="card-detail">
-            <span class="card-label">Up:</span>
-            <span class="card-value uptime-value">{{ computer.last_checkin_uptime }}</span>
-        </div>
-        {% endif %}
-        <div class="card-detail">
-            <span class="card-label">Ping:</span>
-            {% if computer.last_checkin_timestamp %}
-            <span class="card-value last-seen" data-ts="{{ computer.last_checkin_timestamp|date:'c' }}"></span>
-            {% else %}
-            <span class="card-value">—</span>
-            {% endif %}
-        </div>
-        {% if computer.has_in_progress %}
-        <div class="card-detail">
-            <span class="badge badge-in-progress" style="font-size: 10px;">vykdomas</span>
-        </div>
-        {% endif %}
+        {% include "ctrl/partial/computer_card.html" %}
     </div>
     {% empty %}
     <p class="text-muted">Nėra kompiuterių</p>
     {% endfor %}
 </div>
+{% endif %}

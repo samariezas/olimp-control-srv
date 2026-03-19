@@ -9,6 +9,7 @@ from datetime import timedelta
 class Location(models.Model):
     name = models.TextField()
     sequence_num = models.IntegerField(default=0, null=False)
+    grid_cols = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -55,6 +56,8 @@ class Computer(models.Model):
     name = models.CharField(max_length=32)
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
     sequence_num = models.IntegerField(default=0, null=False)
+    grid_row = models.PositiveIntegerField(null=True, blank=True)
+    grid_col = models.PositiveIntegerField(null=True, blank=True)
 
     objects = ComputerQuerySet.as_manager()
 

@@ -3,8 +3,9 @@
 {% block title %}{{ location.name }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="display: flex; align-items: center; gap: 12px;">
     <h1>{{ location.name }}</h1>
+    <a href="{% url 'ctrl.location_edit_layout' location.pk %}" class="btn btn-sm text-muted" style="font-size: 11px;">Redaguoti išdėstymą</a>
 </div>
 <div class="connection-lost" id="connection-lost">Ryšys nutrūko</div>
 <div id="location-status">

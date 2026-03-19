@@ -1,12 +1,15 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Prefetch, Q, Exists, OuterRef
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import generic
 
-from .models import Location, Computer, Task, Ticket
-from .forms import NewTaskForm
+from .models import Location, Computer, UnknownComputer, Task, Ticket
+from .forms import NewTaskForm, RegisterComputerForm
 
 
 def _computer_queryset():
@@ -57,13 +60,24 @@ def index_status_partial(request):
     return render(request, "ctrl/partial/index_status_partial.html", _get_status_context())
 
 
+def _split_placed(computers):
+    """Split computers into (placed, unplaced) based on grid_row/grid_col."""
+    placed = [c for c in computers if c.grid_row is not None and c.grid_col is not None]
+    unplaced = [c for c in computers if c.grid_row is None or c.grid_col is None]
+    return placed, unplaced
+
+
 def _get_location_context(pk):
     location = get_object_or_404(Location, pk=pk)
     computers = list(_computer_queryset().filter(location=location))
+    placed, unplaced = _split_placed(computers)
     online_count = sum(1 for c in computers if c.is_online)
+
     return {
         "location": location,
         "computers": computers,
+        "placed_computers": placed,
+        "unplaced_computers": unplaced,
         "online_count": online_count,
         "offline_count": len(computers) - online_count,
         "total_count": len(computers),
@@ -78,6 +92,61 @@ def location_detail(request, pk):
 @login_required
 def location_detail_partial(request, pk):
     return render(request, "ctrl/partial/location_partial.html", _get_location_context(pk))
+
+
+@login_required
+def location_edit_layout(request, pk):
+    location = get_object_or_404(Location, pk=pk)
+    computers = list(Computer.objects.filter(location=location).order_by("sequence_num"))
+    placed, unplaced = _split_placed(computers)
+    grid_rows = max((c.grid_row for c in placed), default=4)
+
+    return render(request, "ctrl/location_edit_layout.html", {
+        "location": location,
+        "placed_computers": placed,
+        "unplaced_computers": unplaced,
+        "grid_rows": grid_rows,
+    })
+
+
+@login_required
+def location_save_layout(request, pk):
+    if request.method != "POST":
+        return redirect("ctrl.location_edit_layout", pk=pk)
+
+    location = get_object_or_404(Location, pk=pk)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    grid_cols = data.get("grid_cols")
+    positions = data.get("positions", [])
+
+    occupied = set()
+    for p in positions:
+        if p.get("row") is not None and p.get("col") is not None:
+            key = (p["row"], p["col"])
+            if key in occupied:
+                return JsonResponse({"error": f"Duplicate position {key}"}, status=400)
+            occupied.add(key)
+
+    computer_ids = [p["id"] for p in positions]
+    computers = {c.pk: c for c in Computer.objects.filter(pk__in=computer_ids, location=location)}
+
+    with transaction.atomic():
+        if grid_cols is not None:
+            location.grid_cols = grid_cols
+            location.save(update_fields=["grid_cols"])
+
+        for p in positions:
+            comp = computers.get(p["id"])
+            if comp:
+                comp.grid_row = p.get("row")
+                comp.grid_col = p.get("col")
+                comp.save(update_fields=["grid_row", "grid_col"])
+
+    return JsonResponse({"ok": True})
 
 
 @login_required
@@ -130,6 +199,39 @@ def create_task(request):
     return render(request, "ctrl/create_task.html", {
         "form": form,
         "computers_by_location": computers_by_location,
+    })
+
+
+@login_required
+def unknown_computers(request):
+    computers = UnknownComputer.objects.order_by("-last_seen")[:100]
+    return render(request, "ctrl/unknown_computers.html", {"computers": computers})
+
+
+@login_required
+def register_computer(request, pk):
+    uc = get_object_or_404(UnknownComputer, pk=pk)
+
+    if Computer.objects.filter(machine_id=uc.machine_id).exists():
+        uc.delete()
+        return redirect("ctrl.unknown_computers")
+
+    if request.method == "POST":
+        form = RegisterComputerForm(request.POST)
+        if form.is_valid():
+            Computer.objects.create(
+                machine_id=uc.machine_id,
+                name=form.cleaned_data["name"],
+                location=form.cleaned_data["location"],
+            )
+            uc.delete()
+            return redirect("ctrl.unknown_computers")
+    else:
+        form = RegisterComputerForm()
+
+    return render(request, "ctrl/register_computer.html", {
+        "uc": uc,
+        "form": form,
     })
 
 

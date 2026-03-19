@@ -1,0 +1,34 @@
+{% extends "ctrl/base.html" %}
+
+{% block title %}Nežinomi kompiuteriai - LMIO CTRL{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Nežinomi kompiuteriai</h1>
+</div>
+
+{% if computers %}
+<table>
+    <thead>
+        <tr>
+            <th>Machine ID</th>
+            <th>Pirmas pingas</th>
+            <th>Paskutinis pingas</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for c in computers %}
+        <tr>
+            <td><code>{{ c.machine_id }}</code></td>
+            <td>{{ c.first_seen }}</td>
+            <td>{{ c.last_seen }}</td>
+            <td><a href="{% url 'ctrl.register_computer' c.pk %}" class="btn btn-sm btn-primary">Registruoti</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="text-muted">Nėra nežinomų kompiuterių</p>
+{% endif %}
+{% endblock %}
