@@ -9,11 +9,11 @@
     <tr>
         <td><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</td>
         <td>{{ t.added }}</td>
-        <td>{{ t.new_count }}</td>
-        <td>{{ t.in_progress_count }}</td>
-        <td>{{ t.completed_count }}</td>
+        <td class="new-tickets">{{ t.new_count }}</td>
+        <td class="in-progress-tickets">{{ t.in_progress_count }}</td>
+        <td class="completed-tickets">{{ t.completed_count }}</td>
         {% if t.error_count %}
-        <td>{{ t.error_count }}</td>
+        <td class="error-tickets">{{ t.error_count }}</td>
         {% endif %}
     </tr>
 {% endfor %}

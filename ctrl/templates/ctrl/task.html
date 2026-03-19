@@ -22,11 +22,11 @@
 <pre>{{ task.payload }}</pre>
 <h3>Bilietėliai:</h3>
 <p>
-    Nauji: {{ task.new_count }},
-    vykdomi: {{ task.in_progress_count }},
-    įvykdyti: {{ task.completed_count }}
+    Nauji: <span class="new-tickets">{{ task.new_count }}</span>,
+    vykdomi: <span class="in-progress-tickets">{{ task.in_progress_count }}</span>,
+    įvykdyti: <span class="completed-tickets">{{ task.completed_count }}</span>
     {% if task.error_count %}
-    , su klaidom: {{ task.error_count }}
+    , su klaidom: <span class="error-tickets">{{ task.error_count }}</span>
     {% endif %}
 </p>
 <table>

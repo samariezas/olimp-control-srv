@@ -1,0 +1,15 @@
+.new-tickets {
+    color: gray;
+}
+
+.in-progress-tickets {
+    color: orange;
+}
+
+.completed-tickets {
+    color: green;
+}
+
+.error-tickets {
+    color: red;
+}

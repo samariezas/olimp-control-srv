@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from django.utils.log import DEFAULT_LOGGING
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,6 +101,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = DEFAULT_LOGGING
+LOGGING["handlers"]["console"]["level"] = "DEBUG"
+LOGGING["loggers"].update({
+    "django.db.backends": {
+        "level": "DEBUG",
+        "handlers": ["console"],
+    },
+})
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
