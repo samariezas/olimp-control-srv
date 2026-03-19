@@ -1,17 +1,73 @@
 {% extends "ctrl/base.html" %}
 
-{% block title %}New task - LMIO CTRL{% endblock %}
+{% block title %}Nauja užduotis - LMIO CTRL{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <h1>Nauja užduotis</h1>
+</div>
 <form method="post">
     {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    <tr>
-        <td>
-            <button type="submit">Submit</button>
-        </td>
-    </tr>
-    </table>
+    <div class="form-group">
+        <label for="id_name">Pavadinimas</label>
+        {{ form.name }}
+    </div>
+    <div class="form-group">
+        <label for="id_run_as">Leisti kaip</label>
+        {{ form.run_as }}
+    </div>
+    <div class="form-group">
+        <label>Kompiuteriai</label>
+        {% if form.computers.errors %}
+        <div style="color: var(--color-error); font-size: 13px; margin-bottom: 8px;">{{ form.computers.errors }}</div>
+        {% endif %}
+        <div class="select-actions">
+            <button type="button" class="btn btn-sm" onclick="toggleAll(true)">Pažymėti visus</button>
+            <button type="button" class="btn btn-sm" onclick="toggleAll(false)">Atžymėti visus</button>
+        </div>
+        {% for location_name, computers in computers_by_location.items %}
+        <div class="checkbox-group" data-location="{{ location_name }}">
+            <div class="checkbox-group-header">
+                <h4>{{ location_name }}</h4>
+                <div>
+                    <button type="button" class="btn btn-sm" onclick="toggleGroup(this, true)">Visi</button>
+                    <button type="button" class="btn btn-sm" onclick="toggleGroup(this, false)">Joks</button>
+                </div>
+            </div>
+            <div class="checkbox-grid">
+                {% for c in computers %}
+                <label>
+                    <input type="checkbox" name="computers" value="{{ c.pk }}"
+                        {% if c.pk|stringformat:"d" in form.computers.value %}checked{% endif %}>
+                    {{ c.name }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="form-group">
+        <label for="id_payload">Kodas</label>
+        <textarea name="payload" id="id_payload" class="mono" rows="15" cols="80">{{ form.payload.value|default:"" }}</textarea>
+        {% if form.payload.errors %}
+        <div style="color: var(--color-error); font-size: 13px;">{{ form.payload.errors }}</div>
+        {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Sukurti užduotį</button>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAll(checked) {
+    document.querySelectorAll('input[name="computers"]').forEach(function(cb) {
+        cb.checked = checked;
+    });
+}
+function toggleGroup(btn, checked) {
+    btn.closest('.checkbox-group').querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+        cb.checked = checked;
+    });
+}
+</script>
 {% endblock %}

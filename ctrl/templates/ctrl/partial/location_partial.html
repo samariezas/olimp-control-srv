@@ -1,0 +1,37 @@
+<div class="summary-bar">
+    <span class="stat">Prisijungę: <span class="stat-online">{{ online_count }}</span> / {{ total_count }}</span>
+    <span class="stat">Neprisijungę: <span class="stat-offline">{{ offline_count }}</span></span>
+    <span class="last-updated" id="last-updated"></span>
+</div>
+
+<div class="computer-grid">
+    {% for computer in computers %}
+    <div class="computer-card {% if computer.has_in_progress %}busy{% elif computer.is_online %}online{% else %}offline{% endif %}">
+        <div class="card-name">
+            <span class="status-dot"></span>
+            <a href="{% url 'ctrl.computer' computer.machine_id %}">{{ computer.name }}</a>
+        </div>
+        {% if computer.last_checkin_uptime %}
+        <div class="card-detail">
+            <span class="card-label">Up:</span>
+            <span class="card-value uptime-value">{{ computer.last_checkin_uptime }}</span>
+        </div>
+        {% endif %}
+        <div class="card-detail">
+            <span class="card-label">Ping:</span>
+            {% if computer.last_checkin_timestamp %}
+            <span class="card-value last-seen" data-ts="{{ computer.last_checkin_timestamp|date:'c' }}"></span>
+            {% else %}
+            <span class="card-value">—</span>
+            {% endif %}
+        </div>
+        {% if computer.has_in_progress %}
+        <div class="card-detail">
+            <span class="badge badge-in-progress" style="font-size: 10px;">vykdomas</span>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-muted">Nėra kompiuterių</p>
+    {% endfor %}
+</div>

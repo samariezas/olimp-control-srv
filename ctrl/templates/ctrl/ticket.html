@@ -3,56 +3,65 @@
 {% block title %}Bilietėlis {{ ticket.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<h3>Bilietėlio ID: {{ ticket.pk }}</h3>
-<table>
-<tr>
-    <td>Užduotis:</td>
-    <td><a href="{% url 'ctrl.task' ticket.task.pk %}">{{ ticket.task.name }}</a></td>
-</tr>
-<tr>
-    <td>Kompiuteris:</td>
-    <td> <a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }} </a></td>
-</tr>
-<tr>
-    <td>Statusas:</td>
-    <td>{{ ticket.status_string }}</td>
-</tr>
-{% if ticket.exit_code is not None %}
-<tr>
-    <td>Pabaigos kodas:</td>
-    <td>{{ ticket.exit_code }}</td>
-</tr>
-{% endif %}
-{% if ticket.runtime is not None %}
-<tr>
-    <td>Vykdymo laikas:</td>
-    <td>{{ ticket.runtime_rounded }}</td>
-</tr>
-{% endif %}
-<tr>
-    <td>Pridėjimo laikas:</td>
-    <td>{{ ticket.added }}</td>
-</tr>
-{% if ticket.fetched is not None %}
-<tr>
-    <td>Gavimo laikas:</td>
-    <td>{{ ticket.fetched }}</td>
-</tr>
-{% endif %}
-{% if ticket.completed is not None %}
-<tr>
-    <td>Įvykdymo laikas:</td>
-    <td>{{ ticket.completed }}</td>
-</tr>
-{% endif %}
-</table>
+<div class="page-header">
+    <h1>Bilietėlio ID: {{ ticket.pk }}</h1>
+</div>
 
-<h3>Užduoties kodas:</h3>
-<pre>{{ ticket.task.payload }} </pre>
+<div class="info-card">
+    <dl class="info-grid">
+        <dt>Užduotis</dt>
+        <dd><a href="{% url 'ctrl.task' ticket.task.pk %}">{{ ticket.task.name }}</a></dd>
+        <dt>Kompiuteris</dt>
+        <dd><a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }}</a></dd>
+        <dt>Statusas</dt>
+        <dd>
+            {% if ticket.is_new %}
+            <span class="badge badge-new">naujas</span>
+            {% elif ticket.is_in_progress %}
+            <span class="badge badge-in-progress">vykdomas</span>
+            {% elif ticket.is_completed %}
+                {% if ticket.exit_code == 0 %}
+                <span class="badge badge-completed">įvykdytas</span>
+                {% else %}
+                <span class="badge badge-error">klaida (exit {{ ticket.exit_code }})</span>
+                {% endif %}
+            {% endif %}
+        </dd>
+        {% if ticket.exit_code is not None %}
+        <dt>Pabaigos kodas</dt>
+        <dd>{{ ticket.exit_code }}</dd>
+        {% endif %}
+        {% if ticket.runtime is not None %}
+        <dt>Vykdymo laikas</dt>
+        <dd>{{ ticket.runtime_rounded }}</dd>
+        {% endif %}
+        <dt>Pridėjimo laikas</dt>
+        <dd>{{ ticket.added }}</dd>
+        {% if ticket.fetched is not None %}
+        <dt>Gavimo laikas</dt>
+        <dd>{{ ticket.fetched }}</dd>
+        {% endif %}
+        {% if ticket.completed is not None %}
+        <dt>Įvykdymo laikas</dt>
+        <dd>{{ ticket.completed }}</dd>
+        {% endif %}
+    </dl>
+</div>
 
-<h3>Stdout:</h3>
-<pre>{{ ticket.stdout }} </pre>
+<div class="section-title">Užduoties kodas</div>
+<pre>{{ ticket.task.payload }}</pre>
 
-<h3>Stderr:</h3>
-<pre>{{ ticket.stderr }} </pre>
+<div class="section-title">Stdout</div>
+{% if ticket.stdout %}
+<pre>{{ ticket.stdout }}</pre>
+{% else %}
+<pre class="empty-output">Nėra išvesties</pre>
+{% endif %}
+
+<div class="section-title">Stderr</div>
+{% if ticket.stderr %}
+<pre>{{ ticket.stderr }}</pre>
+{% else %}
+<pre class="empty-output">Nėra išvesties</pre>
+{% endif %}
 {% endblock %}

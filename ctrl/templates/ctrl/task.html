@@ -3,51 +3,68 @@
 {% block title %}Užduotis {{ task.pk }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<h3>Užduotis: {{ task.name }}</h3>
-<table>
-    <tr>
-        <td>Leisti kaip:</td>
-        <td>{{ task.run_as }}</td>
-    </tr>
-    <tr>
-        <td>Pridėta:</td>
-        <td>{{ task.added }}</td>
-    </tr>
-    <tr>
-        <td>Autorius:</td>
-        <td>{{ task.author.username }}</td>
-    </tr>
-</table>
-<h3>Kodas:</h3>
+<div class="page-header">
+    <h1>Užduotis: {{ task.name }}</h1>
+</div>
+
+<div class="info-card">
+    <dl class="info-grid">
+        <dt>Autorius</dt>
+        <dd>{{ task.author.username|default:"—" }}</dd>
+        <dt>Leisti kaip</dt>
+        <dd>{{ task.run_as }}</dd>
+        <dt>Pridėta</dt>
+        <dd>{{ task.added }}</dd>
+    </dl>
+</div>
+
+<div class="section-title">Kodas</div>
 <pre>{{ task.payload }}</pre>
-<h3>Bilietėliai:</h3>
-<p>
-    Nauji: <span class="new-tickets">{{ task.new_count }}</span>,
-    vykdomi: <span class="in-progress-tickets">{{ task.in_progress_count }}</span>,
-    įvykdyti: <span class="completed-tickets">{{ task.completed_count }}</span>
-    {% if task.error_count %}
-    , su klaidom: <span class="error-tickets">{{ task.error_count }}</span>
-    {% endif %}
-</p>
+
+<div class="section-title">Bilietėliai</div>
+<div class="summary-bar mb-16">
+    <span class="badge badge-new">Nauji: {{ task.new_count }}</span>
+    <span class="badge badge-in-progress">Vykdomi: {{ task.in_progress_count }}</span>
+    <span class="badge badge-completed">Įvykdyti: {{ task.completed_count }}</span>
+    <span class="badge badge-error">Su klaidom: {{ task.error_count }}</span>
+</div>
+
 <table>
-{% for ticket in tickets %}
-    <tr>
-        <td>
-            <a href="{% url 'ctrl.ticket' ticket.pk %}">
-                Ticket ID {{ ticket.pk }}<br>
-                {{ ticket.computer.name }} @ {{ ticket.computer.location.name }}
-            </a>
-        </td>
-        <td>
-            {{ ticket.status_string }}
-        </td>
-        {% if ticket.is_completed %}
-        <td>
-            exitcode: {{ ticket.exit_code }}
-            runtime: {{ ticket.runtime_rounded }}
-        </td>
-        {% endif %}
-    </tr>
-{% endfor %}
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Kompiuteris</th>
+            <th>Vieta</th>
+            <th>Statusas</th>
+            <th>Pabaigos kodas</th>
+            <th>Vykdymo laikas</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for ticket in tickets %}
+        <tr>
+            <td><a href="{% url 'ctrl.ticket' ticket.pk %}">#{{ ticket.pk }}</a></td>
+            <td><a href="{% url 'ctrl.computer' ticket.computer.machine_id %}">{{ ticket.computer.name }}</a></td>
+            <td>{{ ticket.computer.location.name|default:"—" }}</td>
+            <td>
+                {% if ticket.is_new %}
+                <span class="badge badge-new">naujas</span>
+                {% elif ticket.is_in_progress %}
+                <span class="badge badge-in-progress">vykdomas</span>
+                {% elif ticket.is_completed %}
+                    {% if ticket.exit_code == 0 %}
+                    <span class="badge badge-completed">įvykdytas</span>
+                    {% else %}
+                    <span class="badge badge-error">klaida</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td>{% if ticket.is_completed %}{{ ticket.exit_code }}{% else %}—{% endif %}</td>
+            <td>{% if ticket.is_completed %}{{ ticket.runtime_rounded }}{% else %}—{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="text-muted">Nėra bilietėlių</td></tr>
+    {% endfor %}
+    </tbody>
 </table>
 {% endblock %}

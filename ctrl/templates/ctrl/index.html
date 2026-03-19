@@ -1,26 +1,42 @@
 {% extends "ctrl/base.html" %}
 
-{% block content %}
-{{ current_time }}
-{% for location in locations %}
-    <h4>Location {{ location.name }}</h4>
-    {% if location.computer_set.all %}
-        <ul>
-        {% for computer in location.computer_set.all %}
-            {% include "ctrl/partial/index_computer_partial.html" %}
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No computers are defined</p>
-    {% endif %}
-{% endfor %}
+{% block title %}Statusas - LMIO CTRL{% endblock %}
 
-{% if unassigned_computers %}
-    <h4>Unassigned computers</h4>
-    <ul>
-    {% for computer in unassigned_computers %}
-        {% include "ctrl/partial/index_computer_partial.html" %}
-    {% endfor %}
-    </ul>
-{% endif %}
+{% block content %}
+<div class="page-header">
+    <h1>Statusas</h1>
+</div>
+<div class="connection-lost" id="connection-lost">Ryšys nutrūko</div>
+<div id="computer-status" class="compact-view">
+    {% include "ctrl/partial/index_status_partial.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var container = document.getElementById('computer-status');
+
+    var stored = localStorage.getItem('statusView');
+    if (stored === 'detailed') container.classList.remove('compact-view');
+
+    function insertToggle() {
+        var bar = container.querySelector('.summary-bar');
+        if (!bar || bar.querySelector('.view-toggle')) return;
+        var btn = document.createElement('button');
+        btn.className = 'btn btn-sm view-toggle';
+        btn.textContent = container.classList.contains('compact-view') ? 'Detaliau' : 'Kompaktiškai';
+        btn.onclick = function() {
+            container.classList.toggle('compact-view');
+            var isCompact = container.classList.contains('compact-view');
+            btn.textContent = isCompact ? 'Detaliau' : 'Kompaktiškai';
+            localStorage.setItem('statusView', isCompact ? 'compact' : 'detailed');
+        };
+        bar.appendChild(btn);
+    }
+
+    insertToggle();
+    startAutoRefresh('{% url "ctrl.index_status_partial" %}', 'computer-status', 'connection-lost', insertToggle);
+})();
+</script>
 {% endblock %}

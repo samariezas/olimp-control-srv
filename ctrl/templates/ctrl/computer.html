@@ -3,48 +3,80 @@
 {% block title %}{{ computer.name }} - LMIO CTRL{% endblock %}
 
 {% block content %}
-<h3>Computer: {{ computer.name }}</h3>
-<table>
-    <tr>
-        <td>Location: </td>
-        <td>{{ computer.location.name }}</td>
-    </tr>
-    <tr>
-        <td>Most recent ping: </td>
-        <td>{{ computer.last_checkin_timestamp }}</td>
-    </tr>
-    <tr>
-        <td>MID: </td>
-        <td>{{ computer.machine_id }}</td>
-    </tr>
-</table>
-<p>checkinai:</p>
+<div class="page-header">
+    <h1>{{ computer.name }}</h1>
+</div>
+
+<div class="info-card">
+    <dl class="info-grid">
+        <dt>Vieta</dt>
+        <dd>{{ computer.location.name|default:"Nepriskirtas" }}</dd>
+        <dt>MID</dt>
+        <dd>{{ computer.machine_id }}</dd>
+        <dt>Paskutinis pingas</dt>
+        <dd>{{ computer.last_checkin_timestamp|default:"Niekada" }}</dd>
+    </dl>
+</div>
+
+<div class="section-title">Checkinai</div>
 {% if checkins %}
-    <table>
+<table>
+    <thead>
+        <tr>
+            <th>Laikas</th>
+            <th>Uptime</th>
+        </tr>
+    </thead>
+    <tbody>
     {% for c in checkins %}
         <tr>
             <td>{{ c.timestamp }}</td>
             <td>{{ c.uptime }}</td>
         </tr>
     {% endfor %}
-    </table>
+    </tbody>
+</table>
 {% else %}
-<p>nera</p>
+<p class="text-muted">Nėra</p>
 {% endif %}
-<p>Bilietėliai:</p>
+
+<div class="section-title" style="margin-top: 24px;">Bilietėliai</div>
 {% if tickets %}
-    <table>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Užduotis</th>
+            <th>Statusas</th>
+            <th>Pabaigos kodas</th>
+            <th>Vykdymo laikas</th>
+        </tr>
+    </thead>
+    <tbody>
     {% for t in tickets %}
         <tr>
-            <td><a href="{% url 'ctrl.ticket' t.pk %}">Ticket id {{ t.pk }}: {{ t.task.name }}</a></td>
-            <td>{{ t.status_string }}</td>
-            {% if t.is_completed %}
-            <td>exitcode: {{ t.exit_code }} @ {{ t.runtime_rounded }}</td>
-            {% endif %}
+            <td><a href="{% url 'ctrl.ticket' t.pk %}">#{{ t.pk }}</a></td>
+            <td><a href="{% url 'ctrl.task' t.task.pk %}">{{ t.task.name }}</a></td>
+            <td>
+                {% if t.is_new %}
+                <span class="badge badge-new">naujas</span>
+                {% elif t.is_in_progress %}
+                <span class="badge badge-in-progress">vykdomas</span>
+                {% elif t.is_completed %}
+                    {% if t.exit_code == 0 %}
+                    <span class="badge badge-completed">įvykdytas</span>
+                    {% else %}
+                    <span class="badge badge-error">klaida</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td>{% if t.is_completed %}{{ t.exit_code }}{% else %}—{% endif %}</td>
+            <td>{% if t.is_completed %}{{ t.runtime_rounded }}{% else %}—{% endif %}</td>
         </tr>
     {% endfor %}
-    </table>
+    </tbody>
+</table>
 {% else %}
-<p>nera</p>
+<p class="text-muted">Nėra</p>
 {% endif %}
 {% endblock %}

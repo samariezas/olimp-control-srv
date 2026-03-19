@@ -3,19 +3,35 @@
 {% block title %}Užduotys - LMIO CTRL{% endblock %}
 
 {% block content %}
-<h3>Užduotys</h3>
+<div class="page-header">
+    <h1>Užduotys</h1>
+</div>
 <table>
-{% for t in task_list %}
-    <tr>
-        <td><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</td>
-        <td>{{ t.added }}</td>
-        <td class="new-tickets">{{ t.new_count }}</td>
-        <td class="in-progress-tickets">{{ t.in_progress_count }}</td>
-        <td class="completed-tickets">{{ t.completed_count }}</td>
-        {% if t.error_count %}
-        <td class="error-tickets">{{ t.error_count }}</td>
-        {% endif %}
-    </tr>
-{% endfor %}
+    <thead>
+        <tr>
+            <th>Pavadinimas</th>
+            <th>Autorius</th>
+            <th>Pridėta</th>
+            <th>Nauji</th>
+            <th>Vykdomi</th>
+            <th>Įvykdyti</th>
+            <th>Su klaidom</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for t in task_list %}
+        <tr>
+            <td><a href="{% url 'ctrl.task' t.pk %}">{{ t.name }}</a></td>
+            <td>{{ t.author.username|default:"—" }}</td>
+            <td>{{ t.added }}</td>
+            <td><span class="badge badge-new">{{ t.new_count }}</span></td>
+            <td><span class="badge badge-in-progress">{{ t.in_progress_count }}</span></td>
+            <td><span class="badge badge-completed">{{ t.completed_count }}</span></td>
+            <td><span class="badge badge-error">{{ t.error_count }}</span></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7" class="text-muted">Nėra užduočių</td></tr>
+    {% endfor %}
+    </tbody>
 </table>
 {% endblock %}
