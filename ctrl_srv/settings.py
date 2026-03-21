@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 from django.utils.log import DEFAULT_LOGGING
 
@@ -17,17 +18,22 @@ from django.utils.log import DEFAULT_LOGGING
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+DEFAULT_SECRET_KEY = 'django-insecure-3pm&fv1w3u5m)ogno056o8=@!(qmk*+x4rcv=_%7pykcfd4wx9'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3pm&fv1w3u5m)ogno056o8=@!(qmk*+x4rcv=_%7pykcfd4wx9'
+# Environment variables
+CTRL_SECRET_KEY = os.environ.get("CTRL_SECRET_KEY", default=DEFAULT_SECRET_KEY)
+CTRL_PRODUCTION = not not os.environ.get("CTRL_PRODUCTION")
+CTRL_LOG_LEVEL = os.environ.get("CTRL_LOG_LEVEL", default="INFO")
+CTRL_STATIC_ROOT = os.environ.get("CTRL_STATIC_ROOT")
+CTRL_DB_HOST = os.environ.get("CTRL_DB_HOST")
+CTRL_DB_PORT = os.environ.get("CTRL_DB_PORT", default="5432")
+CTRL_DB_USER = os.environ.get("CTRL_DB_USER", default="postgres")
+CTRL_DB_PASSWORD = os.environ.get("CTRL_DB_PASSWORD")
+CTRL_DB_NAME = os.environ.get("CTRL_DB_NAME", default="postgres")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = not CTRL_PRODUCTION
+SECRET_KEY = CTRL_SECRET_KEY
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -76,12 +82,24 @@ WSGI_APPLICATION = 'ctrl_srv.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if CTRL_PRODUCTION:
+    DATABASES = {
+        'default': {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": CTRL_DB_HOST,
+            "PORT": CTRL_DB_PORT,
+            "USER": CTRL_DB_USER,
+            "PASSWORD": CTRL_DB_PASSWORD,
+            "NAME": CTRL_DB_NAME,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -103,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGGING = DEFAULT_LOGGING
-LOGGING["handlers"]["console"]["level"] = "DEBUG"
+LOGGING["handlers"]["console"]["level"] = CTRL_LOG_LEVEL
 LOGGING["loggers"].update({
     "django.db.backends": {
         "level": "DEBUG",
@@ -124,6 +142,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = CTRL_STATIC_ROOT
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
