@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+
+  ctrl: 
+    environment:
+      CTRL_DB_HOST: "db"
+      CTRL_DB_PASSWORD: "test123"
+
