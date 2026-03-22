@@ -23,6 +23,7 @@ DEFAULT_SECRET_KEY = 'django-insecure-3pm&fv1w3u5m)ogno056o8=@!(qmk*+x4rcv=_%7py
 # Environment variables
 CTRL_SECRET_KEY = os.environ.get("CTRL_SECRET_KEY", default=DEFAULT_SECRET_KEY)
 CTRL_PRODUCTION = not not os.environ.get("CTRL_PRODUCTION")
+CTRL_AUTH_KEY = os.environ.get("CTRL_AUTH_KEY", default='abcde')
 CTRL_STATIC_ROOT = os.environ.get("CTRL_STATIC_ROOT")
 CTRL_DB_HOST = os.environ.get("CTRL_DB_HOST")
 CTRL_DB_PORT = os.environ.get("CTRL_DB_PORT", default="5432")
