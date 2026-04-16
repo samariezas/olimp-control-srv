@@ -152,3 +152,6 @@ class Ticket(models.Model):
 class TaskPreset(models.Model):
     name = models.TextField()
     payload = models.TextField()
+
+    def __str__(self):
+        return self.name
